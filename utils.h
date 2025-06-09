@@ -1,7 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-// Zakładamy, że Nx jest zdefiniowane w params.h
 #include "params.h"
 
 // Funkcje inicjalizujące (zamiast zwracać wektory, modyfikują przekazane tablice)

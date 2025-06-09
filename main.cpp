@@ -1,44 +1,37 @@
-#include <iostream>
-#include <fstream>
 #include "params.h"
-#include "utils.h"
 #include "analytical.h"
+#include "explicit.h"
+#include "implicit.h"
+#include "output.h"
+
+#include <iostream>
+#include <vector>
 
 int main() {
-    try {
-        // 1. Inicjalizacja siatki przestrzennej - tablica statyczna
-        double x[Nx];
-        init_space_grid(x);
+    using namespace params;
 
-        // 2. Wybrane momenty czasu do testów (t=0, t=0.1, t=0.5, t=1.0, t=2.0)
-        constexpr int Nt_points = 5;
-        double time_points[Nt_points] = {0.0, 0.1, 0.5, 1.0, 2.0};
+    std::vector<double> u_explicit(Nx);
+    std::vector<double> u_implicit(Nx);
 
-        // 3. Plik wyjściowy dla wyników
-        std::ofstream out("analytical_results.csv");
-        if (!out) {
-            std::cerr << "Blad: Nie mozna otworzyc pliku do zapisu\n";
-            return 1;
-        }
-        out << "x,t,U_analytical\n"; // Nagłówek CSV
+    double x_start = -a;
 
-        // 4. Obliczenia dla każdego czasu
-        double U_analytical[Nx];
-        for (int k = 0; k < Nt_points; ++k) {
-            double t = time_points[k];
-            calculate_analytical_solution(x, Nx, t, U_analytical);
-
-            // Zapis wyników
-            for (int i = 0; i < Nx; ++i) {
-                out << x[i] << "," << t << "," << U_analytical[i] << "\n";
-            }
-        }
-
-        std::cout << "Obliczenia analityczne zapisane do analytical_results.csv\n";
-        return 0;
-
-    } catch (const std::exception& e) {
-        std::cerr << "Blad: " << e.what() << "\n";
-        return 1;
+    // Warunek początkowy: 1 dla x<0, 0 dla x>=0
+    for (int i = 0; i < Nx; ++i) {
+        double x = x_start + i * dx;
+        u_explicit[i] = (x < 0.0) ? 1.0 : 0.0;
+        u_implicit[i] = u_explicit[i];
     }
+
+    std::cout << "Solving explicit method...\n";
+    solve_explicit(u_explicit, dx, dt_explicit, Nt_explicit);
+
+    std::cout << "Solving Crank-Nicolson method...\n";
+    solve_implicit(u_implicit, dx, dt_implicit, Nt_implicit);
+
+    save_profile("profile_explicit.dat", u_explicit, dx, t_max);
+    save_profile("profile_implicit.dat", u_implicit, dx, t_max);
+
+    std::cout << "Results saved to profile_explicit.dat and profile_implicit.dat\n";
+
+    return 0;
 }

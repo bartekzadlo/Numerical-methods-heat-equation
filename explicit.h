@@ -1,8 +1,5 @@
-//
-// Created by Admin on 08.06.2025.
-//
+#pragma once
 
-#ifndef EXPLICIT_H
-#define EXPLICIT_H
+#include <vector>
 
-#endif //EXPLICIT_H
+void solve_explicit(std::vector<double>& u, double dx, double dt, int Nt);

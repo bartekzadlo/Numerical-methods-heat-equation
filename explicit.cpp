@@ -1,7 +1,7 @@
 #include "explicit.h"
 #include <stdexcept>
 
-void solve_explicit(std::vector<double>& u, double dx, double dt, double D) {
+void solve_explicit(std::vector<double>& u, double dx, double dt, int Nt, double D) {
     const double lambda = D * dt / (dx * dx);
     const int N = u.size();
 

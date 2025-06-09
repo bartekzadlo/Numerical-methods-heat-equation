@@ -1,10 +1,11 @@
-// utils.h
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <vector>
+// Zakładamy, że Nx jest zdefiniowane w params.h
+#include "params.h"
 
-std::vector<double> init_space_grid();
-std::vector<double> init_condition(const std::vector<double>& x);
+// Funkcje inicjalizujące (zamiast zwracać wektory, modyfikują przekazane tablice)
+void init_space_grid(double x[Nx]);
+void init_condition(const double x[Nx], double U0[Nx]);
 
-#endif
+#endif // UTILS_H

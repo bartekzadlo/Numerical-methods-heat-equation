@@ -1,26 +1,17 @@
-#ifndef PARAMS_H
-#define PARAMS_H
-
+#pragma once
 #include <cmath>
 
-// Stałe do symulacji
-constexpr double D = 1.0;                 // współczynnik dyfuzji
-constexpr double tmax = 2.0;              // maksymalny czas symulacji
-const double a = 6.0 * std::sqrt(D * tmax); // zakres przestrzenny [-a, a] (≈8.4853)
+constexpr double D = 1.0;
+constexpr double t_max = 2.0;
+constexpr double a = 6.0 * std::sqrt(D * t_max); // a >= 6*sqrt(D*t_max)
 
-// Parametry siatki
-constexpr int Nx = 170;                   // liczba węzłów przestrzennych
-const double h = (2.0 * a) / (Nx - 1);   // krok przestrzenny (≈0.099895)
+constexpr double dx = 0.05;  // krok przestrzenny
+constexpr double lambda_explicit = 0.4; // stabilny dla metody eksplicytnej
+constexpr double dt_explicit = lambda_explicit * dx * dx / D;
 
-// Warunki stabilności
-constexpr double lambda_explicit = 0.4;   // Dla metody jawnej
-const double dt_explicit = lambda_explicit * h * h / D; // krok czasowy jawnej (≈0.003992)
+constexpr double lambda_implicit = 1.0; // dla Crank-Nicolson
+constexpr double dt_implicit = lambda_implicit * dx * dx / D;
 
-constexpr double lambda_implicit = 1.0;   // Dla metody niejawnej (Crank-Nicolson)
-const double dt_implicit = lambda_implicit * h * h / D; // krok czasowy niejawnej (≈0.009979)
-
-// Liczba kroków czasowych
-const int Nt_explicit = static_cast<int>(tmax / dt_explicit) + 1; // ≈501
-const int Nt_implicit = static_cast<int>(tmax / dt_implicit) + 1; // ≈201
-
-#endif // PARAMS_H
+constexpr int Nx = static_cast<int>(2 * a / dx) + 1;  // liczba punktów przestrzennych
+constexpr int Nt_explicit = static_cast<int>(t_max / dt_explicit) + 1;
+constexpr int Nt_implicit = static_cast<int>(t_max / dt_implicit) + 1;

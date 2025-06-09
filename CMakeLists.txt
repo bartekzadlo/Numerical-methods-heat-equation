@@ -5,8 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(untitled2 main.cpp
         params.h
-        utils.h
-        utils.cpp
         analytical.cpp
         analytical.h
         CALERF.cpp
@@ -19,5 +17,4 @@ add_executable(untitled2 main.cpp
         linalg.h
         output.cpp
         output.h
-        solver.cpp
-        solver.h)
+)

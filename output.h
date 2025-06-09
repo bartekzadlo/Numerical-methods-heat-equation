@@ -1,8 +1,11 @@
-//
-// Created by Admin on 08.06.2025.
-//
+#pragma once
 
-#ifndef OUTPUT_H
-#define OUTPUT_H
+#include <vector>
+#include <string>
 
-#endif //OUTPUT_H
+void save_profile(const std::string& filename, const std::vector<double>& u,
+                  double dx, double time);
+
+void save_error(const std::string& filename,
+                const std::vector<double>& errors,
+                double dt);

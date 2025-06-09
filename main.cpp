@@ -11,52 +11,50 @@
 int main() {
     using namespace params;
 
-    // Inicjalizacja wektorów
-    std::vector<double> u_explicit(Nx);
-    std::vector<double> u_implicit(Nx);
-    double x_start = -a;
+    std::vector<double> dx_values = {0.2, 0.1, 0.05, 0.025, 0.0125};
+    std::vector<double> log_dx, log_err_explicit, log_err_thomas, log_err_lu;
 
-    // Warunek początkowy: U(x,0) = 1 dla x < 0, 0 dla x >= 0
-    for (int i = 0; i < Nx; ++i) {
-        double x = x_start + i * dx;
-        u_explicit[i] = (x < 0.0) ? 1.0 : 0.0;
-        u_implicit[i] = u_explicit[i];
+    for (double dx_local : dx_values) {
+        int Nx_local = static_cast<int>(2.0 * a / dx_local) + 1;
+        double dt_local = 0.4 * dx_local * dx_local / D; // lambda < 0.5
+        int Nt_local = static_cast<int>(t_max / dt_local);
+
+        std::vector<double> u_init(Nx_local), u_exp(Nx_local), u_thomas(Nx_local), u_lu(Nx_local);
+
+        // Warunek początkowy
+        for (int i = 0; i < Nx_local; ++i) {
+            double x = -a + i * dx_local;
+            u_init[i] = (x < 0.0) ? 1.0 : 0.0;
+        }
+
+        u_exp = u_thomas = u_lu = u_init;
+
+        std::cout << "dx = " << dx_local << ", dt = " << dt_local << ", Nx = " << Nx_local << ", Nt = " << Nt_local << "\n";
+
+        // Rozwiązania
+        solve_explicit(u_exp, dx_local, dt_local, Nt_local);
+        solve_implicit(u_thomas, dx_local, dt_local, Nt_local);        // Thomas
+        solve_implicit_lu(u_lu, dx_local, dt_local, Nt_local);         // LU
+
+        // Rozwiązanie analityczne
+        std::vector<double> u_exact = analytical_solution(Nx_local, dx_local, t_max);
+
+        // Błędy
+        double err_exp = calculate_max_error(u_exp, u_exact);
+        double err_thomas = calculate_max_error(u_thomas, u_exact);
+        double err_lu = calculate_max_error(u_lu, u_exact);
+
+        log_dx.push_back(std::log10(dx_local));
+        log_err_explicit.push_back(std::log10(err_exp));
+        log_err_thomas.push_back(std::log10(err_thomas));
+        log_err_lu.push_back(std::log10(err_lu));
     }
 
-    try {
-        // Rozwiązanie metodą jawną
-        std::cout << "Solving explicit method (lambda = "
-                  << params::D * dt_explicit / (dx * dx) << ")...\n";
-        solve_explicit(u_explicit, dx, dt_explicit, Nt_explicit);
+    // Zapis
+    save_log_error_plot("error_explicit.dat", log_dx, log_err_explicit);
+    save_log_error_plot("error_thomas.dat", log_dx, log_err_thomas);
+    save_log_error_plot("error_lu.dat", log_dx, log_err_lu);
 
-        // Rozwiązanie metodą Crank-Nicolson
-        std::cout << "Solving Crank-Nicolson method (lambda = "
-                  << params::D * dt_implicit / (dx * dx) << ")...\n";
-        solve_implicit(u_implicit, dx, dt_implicit, Nt_implicit);
-
-        // Zapis wyników
-        save_profile("profile_explicit.dat", u_explicit, dx, t_max);
-        save_profile("profile_implicit.dat", u_implicit, dx, t_max);
-
-        // Obliczenie i zapis błędów
-        std::vector<double> max_errors = {
-            calculate_max_error(u_explicit, dx, t_max),
-            calculate_max_error(u_implicit, dx, t_max)
-        };
-        save_max_error("max_errors.dat", max_errors, t_max);
-
-        std::cout << "\nResults saved to:\n"
-                  << "- profile_explicit.dat (explicit solution profile)\n"
-                  << "- profile_implicit.dat (implicit solution profile)\n"
-                  << "- max_errors.dat (max errors at t_max)\n\n"
-                  << "Max errors at t = " << t_max << ":\n"
-                  << "- Explicit: " << max_errors[0] << "\n"
-                  << "- Implicit: " << max_errors[1] << "\n";
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
-    }
-
+    std::cout << "Saved:\n- error_explicit.dat\n- error_thomas.dat\n- error_lu.dat\n";
     return 0;
 }

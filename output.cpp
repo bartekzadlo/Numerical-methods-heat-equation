@@ -55,3 +55,13 @@ double calculate_max_error(const std::vector<double>& u,
     }
     return max_error;
 }
+
+void save_log_error_plot(const std::string& filename,
+                         const std::vector<double>& log_dx,
+                         const std::vector<double>& log_err) {
+    std::ofstream file(filename);
+    for (size_t i = 0; i < log_dx.size(); ++i) {
+        file << log_dx[i] << " " << log_err[i] << "\n";
+    }
+    file.close();
+}

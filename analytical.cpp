@@ -1,10 +1,5 @@
 #include "analytical.h"
-#include "calerf.h"
 #include "params.h"
-
-#include <cmath>
-
-// Używamy calerfpack::erfc_LD, zwracamy double
 
 double analytical_solution(double x, double t) {
     if (t <= 0.0) {
@@ -14,6 +9,5 @@ double analytical_solution(double x, double t) {
     long double z = static_cast<long double>(x) / denom;
 
     long double val = calerfpack::erfc_LD(z);
-
     return 0.5 * static_cast<double>(val);
 }

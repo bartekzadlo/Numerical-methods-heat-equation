@@ -1,5 +1,6 @@
 #include "output.h"
 #include "analytical.h"
+#include "params.h"
 #include <fstream>
 #include <cmath>
 

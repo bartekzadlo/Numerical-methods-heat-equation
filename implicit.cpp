@@ -12,9 +12,13 @@ void solve_implicit_thomas(std::vector<double>& u, double dx, double dt, int Nt,
     std::vector<double> d(N-2);              // Prawa strona
 
     for (int n = 0; n < Nt; ++n) {
+        // Ustaw warunki brzegowe
+        u[0] = 1.0;    // U(-a, t) = 1
+        u[N-1] = 0.0;  // U(a, t) = 0
+
         for (int i = 1; i < N-1; ++i) {
-            double left = (i == 1) ? u[0] : u[i-1];
-            double right = (i == N-2) ? u[N-1] : u[i+1];
+            double left = u[i-1];
+            double right = u[i+1];
             d[i-1] = (1.0 - lambda)*u[i] + (lambda/2.0)*(left + right);
         }
 
@@ -44,10 +48,14 @@ void solve_implicit_lu(std::vector<double>& u, double dx, double dt, int Nt, dou
     lu_decompose(A, L, U);
 
     for (int n = 0; n < Nt; ++n) {
+        // Ustaw warunki brzegowe
+        u[0] = 1.0;    // U(-a, t) = 1
+        u[N-1] = 0.0;  // U(a, t) = 0
+
         std::vector<double> b(system_size);
         for (int i = 0; i < system_size; ++i) {
-            double left = (i == 0) ? 1.0 : u[i];
-            double right = (i == system_size-1) ? 0.0 : u[i+2];
+            double left = u[i];     // i+1-1 = i
+            double right = u[i+2];  // i+1+1 = i+2
             b[i] = (1.0 - lambda)*u[i+1] + (lambda/2.0)*(left + right);
         }
 

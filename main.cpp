@@ -1,5 +1,5 @@
-#include "params.h"
 #include "analytical.h"
+#include "params.h"
 #include "explicit.h"
 #include "implicit.h"
 #include "output.h"
@@ -7,23 +7,47 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <iomanip>
+#include <chrono>
+
+void print_progress_header() {
+    std::cout << "=============================================\n";
+    std::cout << "       CONVERGENCE TEST - DIFFUSION EQ\n";
+    std::cout << "=============================================\n";
+    std::cout << "Parameters:\n";
+    std::cout << "  D = " << params::D << " (diffusion coefficient)\n";
+    std::cout << "  t_max = " << params::t_max << " (final time)\n";
+    std::cout << "  lambda_explicit = " << params::lambda_explicit << "\n";
+    std::cout << "  lambda_implicit = " << params::lambda_implicit << "\n";
+    std::cout << "  a = " << params::calculate_a() << " (domain size)\n";
+    std::cout << "=============================================\n\n";
+}
 
 void run_convergence_test() {
     std::vector<double> h_values = {0.1, 0.05, 0.025, 0.0125, 0.00625};
     std::vector<double> explicit_errors, thomas_errors, lu_errors;
 
-    for (double h : h_values) {
+    print_progress_header();
+    std::cout << "Starting convergence test for " << h_values.size() << " grid sizes...\n";
+
+    for (size_t i = 0; i < h_values.size(); ++i) {
+        double h = h_values[i];
         const double a = params::calculate_a();
         const int Nx = static_cast<int>(2 * a / h) + 1;
         const double dx = h;
 
+        std::cout << "\n=== TEST CASE " << i+1 << "/" << h_values.size() << " ===\n";
+        std::cout << "h = " << h << ", Nx = " << Nx << "\n";
+
         // Initialize solution vectors
         std::vector<double> u_explicit(Nx), u_thomas(Nx), u_lu(Nx);
         double x_start = -a;
-        for (int i = 0; i < Nx; ++i) {
-            double x = x_start + i * dx;
-            double val = (x < 0.0) ? 1.0 : 0.0;
-            u_explicit[i] = u_thomas[i] = u_lu[i] = val;
+        for (int j = 0; j < Nx; ++j) {
+            double x = x_start + j * dx;
+            // --- tutaj poprawka: węzeł x==0 dostaje wartość analityczną 0.5 ---
+            if      (x <  0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 1.0;
+            else if (x >  0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 0.0;
+            else              u_explicit[j] = u_thomas[j] = u_lu[j] = 0.5;
         }
 
         // Calculate time steps
@@ -32,15 +56,42 @@ void run_convergence_test() {
         const int Nt_explicit = static_cast<int>(params::t_max / dt_explicit) + 1;
         const int Nt_implicit = static_cast<int>(params::t_max / dt_implicit) + 1;
 
+        std::cout << "Time steps - Explicit: " << Nt_explicit << " (dt = " << dt_explicit << ")\n";
+        std::cout << "Time steps - Implicit: " << Nt_implicit << " (dt = " << dt_implicit << ")\n";
+
         // Solve with different methods
+        auto start_time = std::chrono::high_resolution_clock::now();
+
+        std::cout << "\nRunning EXPLICIT SCHEME...\n";
         solve_explicit(u_explicit, dx, dt_explicit, Nt_explicit, params::D);
+        auto explicit_time = std::chrono::high_resolution_clock::now();
+        std::cout << "Completed in "
+                 << std::chrono::duration_cast<std::chrono::milliseconds>(explicit_time - start_time).count()
+                 << " ms\n";
+
+        std::cout << "\nRunning THOMAS ALGORITHM...\n";
         solve_implicit_thomas(u_thomas, dx, dt_implicit, Nt_implicit, params::D);
+        auto thomas_time = std::chrono::high_resolution_clock::now();
+        std::cout << "Completed in "
+                 << std::chrono::duration_cast<std::chrono::milliseconds>(thomas_time - explicit_time).count()
+                 << " ms\n";
+
+        std::cout << "\nRunning LU DECOMPOSITION...\n";
         solve_implicit_lu(u_lu, dx, dt_implicit, Nt_implicit, params::D);
+        auto lu_time = std::chrono::high_resolution_clock::now();
+        std::cout << "Completed in "
+                 << std::chrono::duration_cast<std::chrono::milliseconds>(lu_time - thomas_time).count()
+                 << " ms\n";
 
         // Calculate and store errors
         explicit_errors.push_back(calculate_max_error(u_explicit, dx, params::t_max));
         thomas_errors.push_back(calculate_max_error(u_thomas, dx, params::t_max));
         lu_errors.push_back(calculate_max_error(u_lu, dx, params::t_max));
+
+        std::cout << "\nCurrent errors:\n";
+        std::cout << "  Explicit: " << explicit_errors.back() << "\n";
+        std::cout << "  Thomas:   " << thomas_errors.back() << "\n";
+        std::cout << "  LU:       " << lu_errors.back() << "\n";
     }
 
     // Save results for plotting
@@ -48,17 +99,26 @@ void run_convergence_test() {
     save_log_error_data("error_thomas.dat", h_values, thomas_errors);
     save_log_error_data("error_lu.dat", h_values, lu_errors);
 
-    std::cout << "Convergence test completed. Results saved to:\n"
-              << "- error_explicit.dat\n"
-              << "- error_thomas.dat\n"
-              << "- error_lu.dat\n";
+    std::cout << "\n=============================================\n";
+    std::cout << " CONVERGENCE TEST COMPLETED SUCCESSFULLY\n";
+    std::cout << "Results saved to:\n";
+    std::cout << "- error_explicit.dat\n";
+    std::cout << "- error_thomas.dat\n";
+    std::cout << "- error_lu.dat\n";
+    std::cout << "=============================================\n";
 }
 
 int main() {
     try {
+        auto total_start = std::chrono::high_resolution_clock::now();
         run_convergence_test();
+        auto total_end = std::chrono::high_resolution_clock::now();
+
+        std::cout << "\nTotal execution time: "
+                 << std::chrono::duration_cast<std::chrono::seconds>(total_end - total_start).count()
+                 << " seconds\n";
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "\nERROR: " << e.what() << "\n";
         return 1;
     }
     return 0;

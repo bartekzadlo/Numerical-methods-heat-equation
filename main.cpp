@@ -48,8 +48,7 @@ void run_convergence_test() {
         for (int j = 0; j < Nx; ++j) {
             double x = x_start + j * dx;
             if      (x <  0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 1.0;
-            else if (x >  0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 0.0;
-            else if (x = 0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 0.5;
+            else if (x >=  0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 0.0;
         }
 
         // Calculate time steps (używamy rzeczywistego dx zamiast h!)

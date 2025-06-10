@@ -24,7 +24,7 @@ void print_progress_header() {
 }
 
 void run_convergence_test() {
-    std::vector<double> h_values = {0.1, 0.05, 0.025, 0.0125, 0.00625};
+    std::vector<double> h_values = {0.2, 0.1, 0.05, 0.025, 0.0125};
     std::vector<double> explicit_errors, thomas_errors, lu_errors;
 
     print_progress_header();

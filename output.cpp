@@ -20,7 +20,7 @@ void save_log_error_data(const std::string& filename,
 
 double calculate_max_error(const std::vector<double>& u, double dx, double t) {
     double max_error = 0.0;
-    double a = 6.0 * std::sqrt(params::D * t);
+    double a = params::calculate_a();
     double x_start = -a;
 
     for (size_t i = 0; i < u.size(); ++i) {

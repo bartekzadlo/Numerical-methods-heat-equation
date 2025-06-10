@@ -33,26 +33,24 @@ void run_convergence_test() {
     for (size_t i = 0; i < h_values.size(); ++i) {
         double h = h_values[i];
         const double a = params::calculate_a();
-
-        // --- ZMIANA: Oblicz Nx tak, aby x=0 zawsze było węzłem siatki ---
-        const int Nx_half = static_cast<int>(std::ceil(a / h)); // Liczba punktów od x=0 do x=a
-        const int Nx = 2 * Nx_half + 1;                        // Całkowita liczba punktów (nieparzysta)
-        const double dx = (2.0 * a) / (Nx - 1);                 // Rzeczywisty krok siatki (może się różnić od h!)
+        const int Nx = static_cast<int>(2 * a / h) + 1;
+        const double dx = h;
 
         std::cout << "\n=== TEST CASE " << i+1 << "/" << h_values.size() << " ===\n";
-        std::cout << "Requested h = " << h << ", Actual dx = " << dx << ", Nx = " << Nx << "\n";
+        std::cout << "h = " << h << ", Nx = " << Nx << "\n";
 
         // Initialize solution vectors
         std::vector<double> u_explicit(Nx), u_thomas(Nx), u_lu(Nx);
         double x_start = -a;
         for (int j = 0; j < Nx; ++j) {
             double x = x_start + j * dx;
+            // --- tutaj poprawka: węzeł x==0 dostaje wartość analityczną 0.5 ---
             if      (x <  0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 1.0;
             else if (x >  0.0) u_explicit[j] = u_thomas[j] = u_lu[j] = 0.0;
-            else               u_explicit[j] = u_thomas[j] = u_lu[j] = 0.5;
+            else              u_explicit[j] = u_thomas[j] = u_lu[j] = 0.5;
         }
 
-        // Calculate time steps (używamy rzeczywistego dx zamiast h!)
+        // Calculate time steps
         const double dt_explicit = params::lambda_explicit * dx * dx / params::D;
         const double dt_implicit = params::lambda_implicit * dx * dx / params::D;
         const int Nt_explicit = static_cast<int>(params::t_max / dt_explicit) + 1;

@@ -18,7 +18,7 @@ oraz warunkami brzegowymi Dirichleta na krańcach domeny `[-a, a]`.
 
 Rozwiązanie analityczne wyraża się przez funkcję komplementarną błędu:
 
-$$u(x, t) = \frac{1}{2} \operatorname{erfc}\!\left(\frac{x}{2\sqrt{Dt}}\right)$$
+$$u(x, t) = \frac{1}{2} \, \mathrm{erfc}\!\left(\frac{x}{2\sqrt{Dt}}\right)$$
 
 ---
 
